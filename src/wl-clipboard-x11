@@ -66,6 +66,7 @@ APPEND=0
 FOLLOW=0
 TIMEOUT=0
 TIMEOUT_COMMAND=""
+TARGETS=0
 : $((COUNT = $#))
 set -- "${@}" --
 
@@ -75,24 +76,33 @@ then
     do
         CMD=$(parse_xclip_opt "$1")
         case "$CMD" in
-            -in) CLIPBOARD_COMMAND="${WL_COPY}";;
-            -out)
+            -i|-in) CLIPBOARD_COMMAND="${WL_COPY}";;
+            -o|-out)
                 CLIPBOARD_COMMAND="${WL_PASTE}"
                 set -- "${@}" "--no-newline"
                 ;;
-            -filter) true;;
-            -rmlastnl) set -- "${@}" "--trim-newline";;
-            -loops)
+            -f|-filter) true;;
+            -r|-rmlastnl) set -- "${@}" "--trim-newline";;
+            -l|-loops)
                 [ $(($2)) -gt 0 ] && set -- "${@}" "--paste-once"
                 : $((COUNT = COUNT - 1))
                 shift 1
                 ;;
-            -target) set -- "${@}" "--type";;
-            -display)
+            -t|-target) 
+                if [ "$2" == "TARGETS" ]; then
+                    CLIPBOARD_COMMAND="${WL_PASTE}"
+                    set -- "${@}" "--list-types"
+                    : $((COUNT = COUNT -1 ))
+                    shift 1
+                else
+                    set -- "${@}" "--type"
+                fi
+                ;;
+            -d|-display)
                 : $((COUNT = COUNT -1 ))
                 shift 1
                 ;;
-            -help)
+            -h|-help)
                 show_help
                 exit 0
                 ;;
